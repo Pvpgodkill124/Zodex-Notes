@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zodex Notes</title>
+<style>
+    body {
+        margin: 0;
+        font-family: sans-serif;
+        background: #000;
+        color: #fff;
+    }
+    header {
+        background: #4B0082;
+        padding: 15px;
+        text-align: center;
+        font-size: 1.5em;
+    }
+    #noteInput {
+        width: 75%;
+        padding: 10px;
+        border: none;
+        outline: none;
+        font-size: 1em;
+    }
+    #addNote, #voiceNote {
+        background: #6a0dad;
+        color: #fff;
+        padding: 10px;
+        border: none;
+        cursor: pointer;
+        font-size: 1em;
+    }
+    ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    li {
+        background: #111;
+        margin: 8px;
+        padding: 10px;
+        border-left: 5px solid #6a0dad;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .pin {
+        border-left-color: gold !important;
+    }
+    button {
+        background: #6a0dad;
+        color: white;
+        border: none;
+        padding: 5px 8px;
+        margin-left: 5px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+<header>Zodex Notes</header>
+
+<div style="padding: 10px; display: flex; justify-content: center; align-items: center;">
+    <input id="noteInput" type="text" placeholder="Write a note...">
+    <button id="addNote">Add</button>
+    <button id="voiceNote">🎤</button>
+</div>
+
+<ul id="notesList"></ul>
+
+<script>
+    const noteInput = document.getElementById('noteInput');
+    const addNoteBtn = document.getElementById('addNote');
+    const voiceNoteBtn = document.getElementById('voiceNote');
+    const notesList = document.getElementById('notesList');
+
+    let notes = JSON.parse(localStorage.getItem('zodexNotes') || '[]');
+    renderNotes();
+
+    function renderNotes() {
+        notesList.innerHTML = '';
+        notes.forEach((note, index) => {
+            const li = document.createElement('li');
+            li.className = note.pinned ? 'pin' : '';
+            li.innerHTML = `
+                <span>${note.text}</span>
+                <div>
+                    <button onclick="togglePin(${index})">📌</button>
+                    <button onclick="deleteNote(${index})">🗑</button>
+                </div>
+            `;
+            notesList.appendChild(li);
+        });
+    }
+
+    function addNote(text) {
+        if (!text.trim()) return;
+        notes.push({ text, pinned: false });
+        saveNotes();
+    }
+
+    function togglePin(index) {
+        notes[index].pinned = !notes[index].pinned;
+        saveNotes();
+    }
+
+    function deleteNote(index) {
+        notes.splice(index, 1);
+        saveNotes();
+    }
+
+    function saveNotes() {
+        localStorage.setItem('zodexNotes', JSON.stringify(notes));
+        renderNotes();
+    }
+
+    addNoteBtn.onclick = () => {
+        addNote(noteInput.value);
+        noteInput.value = '';
+    };
+
+    voiceNoteBtn.onclick = () => {
+        if (!('webkitSpeechRecognition' in window)) {
+            alert("Speech recognition not supported");
+            return;
+        }
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = "en-US";
+        recognition.onresult = (event) => {
+            noteInput.value = event.results[0][0].transcript;
+        };
+        recognition.start();
+    };
+</script>
+
+</body>
+</html>
